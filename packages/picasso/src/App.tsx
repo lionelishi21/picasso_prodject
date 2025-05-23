@@ -109,11 +109,12 @@ const App: React.FC = () => {
 
             <Route path="/builder/:siteId/pages" element={
               <PrivateRoute>
-                <BuilderLayout>
-                  <PageList />
-                </BuilderLayout>
+                  <BuilderLayout>
+                    <PageList />
+                  </BuilderLayout>
               </PrivateRoute>
             } />
+            
             
             {/* <Route path="/builder/:siteId/pages" element={
               <PrivateRoute>

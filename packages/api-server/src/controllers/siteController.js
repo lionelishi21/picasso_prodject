@@ -231,7 +231,86 @@ class SiteController {
         type: 'home',
         isDefault: true,
         isPublished: true,
-        components: [],
+        components: [
+          {
+            type: 'Header',
+            props: {
+              logo: 'https://via.placeholder.com/150x50',
+              menuItems: [
+                { label: 'Home', url: '/' },
+                { label: 'Products', url: '/products' },
+                { label: 'About', url: '/about' },
+                { label: 'Contact', url: '/contact' },
+              ],
+              showSearch: true,
+              showCartIcon: true,
+            },
+            layout: {
+              x: 0,
+              y: 0,
+              w: 12,
+              h: 2,
+            },
+            children: []
+          },
+          {
+            type: 'HeroBanner',
+            props: {
+              title: 'Welcome to Our Store',
+              subtitle: 'Discover amazing products at great prices',
+              backgroundImage: 'https://via.placeholder.com/1920x600',
+              buttonText: 'Shop Now',
+              buttonLink: '/products'
+            },
+            layout: {
+              x: 0,
+              y: 2,
+              w: 12,
+              h: 4,
+            },
+            children: []
+          },
+          {
+            type: 'ProductCardGrid',
+            props: {
+              title: 'Featured Products',
+              subtitle: 'Check out our latest arrivals',
+              columns: 4,
+              gap: 4,
+            },
+            layout: {
+              x: 0,
+              y: 6,
+              w: 12,
+              h: 6,
+            },
+            children: []
+          },
+          {
+            type: 'Footer',
+            props: {
+              logo: 'https://via.placeholder.com/150x50',
+              sections: [
+                {
+                  heading: 'Company',
+                  links: [
+                    { text: 'About Us', url: '/about' },
+                    { text: 'Contact', url: '/contact' }
+                  ]
+                }
+              ],
+              showNewsletter: true,
+              showSocial: true
+            },
+            layout: {
+              x: 0,
+              y: 12,
+              w: 12,
+              h: 4,
+            },
+            children: []
+          }
+        ],
         seo: {
           metaTitle: 'Home - Your Store',
           metaDescription: 'Welcome to our online store',
@@ -247,7 +326,85 @@ class SiteController {
         type: 'product-listing',
         isDefault: false,
         isPublished: true,
-        components: [],
+        components: [
+          {
+            type: 'Header',
+            props: {
+              logo: 'https://via.placeholder.com/150x50',
+              menuItems: [
+                { label: 'Home', url: '/' },
+                { label: 'Products', url: '/products' },
+                { label: 'About', url: '/about' },
+                { label: 'Contact', url: '/contact' },
+              ],
+              showSearch: true,
+              showCartIcon: true,
+            },
+            layout: {
+              x: 0,
+              y: 0,
+              w: 12,
+              h: 2,
+            },
+            children: []
+          },
+          {
+            type: 'Text',
+            props: {
+              text: 'Our Products',
+              type: 'h1',
+              align: 'center',
+              weight: 'bold'
+            },
+            layout: {
+              x: 0,
+              y: 2,
+              w: 12,
+              h: 1,
+            },
+            children: []
+          },
+          {
+            type: 'ProductCardGrid',
+            props: {
+              columns: 4,
+              gap: 4,
+              showFilters: true,
+              showSort: true
+            },
+            layout: {
+              x: 0,
+              y: 3,
+              w: 12,
+              h: 8,
+            },
+            children: []
+          },
+          {
+            type: 'Footer',
+            props: {
+              logo: 'https://via.placeholder.com/150x50',
+              sections: [
+                {
+                  heading: 'Company',
+                  links: [
+                    { text: 'About Us', url: '/about' },
+                    { text: 'Contact', url: '/contact' }
+                  ]
+                }
+              ],
+              showNewsletter: true,
+              showSocial: true
+            },
+            layout: {
+              x: 0,
+              y: 11,
+              w: 12,
+              h: 4,
+            },
+            children: []
+          }
+        ],
         seo: {
           metaTitle: 'Products - Your Store',
           metaDescription: 'Browse our amazing products',
@@ -263,7 +420,99 @@ class SiteController {
         type: 'page',
         isDefault: false,
         isPublished: true,
-        components: [],
+        components: [
+          {
+            type: 'Header',
+            props: {
+              logo: 'https://via.placeholder.com/150x50',
+              menuItems: [
+                { label: 'Home', url: '/' },
+                { label: 'Products', url: '/products' },
+                { label: 'About', url: '/about' },
+                { label: 'Contact', url: '/contact' },
+              ],
+              showSearch: true,
+              showCartIcon: true,
+            },
+            layout: {
+              x: 0,
+              y: 0,
+              w: 12,
+              h: 2,
+            },
+            children: []
+          },
+          {
+            type: 'Text',
+            props: {
+              text: 'About Us',
+              type: 'h1',
+              align: 'center',
+              weight: 'bold'
+            },
+            layout: {
+              x: 0,
+              y: 2,
+              w: 12,
+              h: 1,
+            },
+            children: []
+          },
+          {
+            type: 'Text',
+            props: {
+              text: 'Welcome to our store! We are passionate about providing high-quality products and exceptional customer service.',
+              type: 'p',
+              align: 'center'
+            },
+            layout: {
+              x: 0,
+              y: 3,
+              w: 12,
+              h: 2,
+            },
+            children: []
+          },
+          {
+            type: 'Image',
+            props: {
+              src: 'https://via.placeholder.com/800x400',
+              alt: 'Our Store',
+              objectFit: 'cover'
+            },
+            layout: {
+              x: 0,
+              y: 5,
+              w: 12,
+              h: 4,
+            },
+            children: []
+          },
+          {
+            type: 'Footer',
+            props: {
+              logo: 'https://via.placeholder.com/150x50',
+              sections: [
+                {
+                  heading: 'Company',
+                  links: [
+                    { text: 'About Us', url: '/about' },
+                    { text: 'Contact', url: '/contact' }
+                  ]
+                }
+              ],
+              showNewsletter: true,
+              showSocial: true
+            },
+            layout: {
+              x: 0,
+              y: 9,
+              w: 12,
+              h: 4,
+            },
+            children: []
+          }
+        ],
         seo: {
           metaTitle: 'About Us - Your Store',
           metaDescription: 'Learn about our company and mission',
@@ -279,7 +528,148 @@ class SiteController {
         type: 'page',
         isDefault: false,
         isPublished: true,
-        components: [],
+        components: [
+          {
+            type: 'Header',
+            props: {
+              logo: 'https://via.placeholder.com/150x50',
+              menuItems: [
+                { label: 'Home', url: '/' },
+                { label: 'Products', url: '/products' },
+                { label: 'About', url: '/about' },
+                { label: 'Contact', url: '/contact' },
+              ],
+              showSearch: true,
+              showCartIcon: true,
+            },
+            layout: {
+              x: 0,
+              y: 0,
+              w: 12,
+              h: 2,
+            },
+            children: []
+          },
+          {
+            type: 'Text',
+            props: {
+              text: 'Contact Us',
+              type: 'h1',
+              align: 'center',
+              weight: 'bold'
+            },
+            layout: {
+              x: 0,
+              y: 2,
+              w: 12,
+              h: 1,
+            },
+            children: []
+          },
+          {
+            type: 'Text',
+            props: {
+              text: 'Have questions? We\'d love to hear from you. Send us a message and we\'ll respond as soon as possible.',
+              type: 'p',
+              align: 'center'
+            },
+            layout: {
+              x: 0,
+              y: 3,
+              w: 12,
+              h: 1,
+            },
+            children: []
+          },
+          {
+            type: 'FormField',
+            props: {
+              label: 'Name',
+              type: 'text',
+              placeholder: 'Enter your name',
+              required: true
+            },
+            layout: {
+              x: 2,
+              y: 4,
+              w: 8,
+              h: 1,
+            },
+            children: []
+          },
+          {
+            type: 'FormField',
+            props: {
+              label: 'Email',
+              type: 'email',
+              placeholder: 'Enter your email',
+              required: true
+            },
+            layout: {
+              x: 2,
+              y: 5,
+              w: 8,
+              h: 1,
+            },
+            children: []
+          },
+          {
+            type: 'FormField',
+            props: {
+              label: 'Message',
+              type: 'textarea',
+              placeholder: 'Enter your message',
+              required: true
+            },
+            layout: {
+              x: 2,
+              y: 6,
+              w: 8,
+              h: 2,
+            },
+            children: []
+          },
+          {
+            type: 'Button',
+            props: {
+              text: 'Send Message',
+              variant: 'primary',
+              size: 'large',
+              fullWidth: true
+            },
+            layout: {
+              x: 2,
+              y: 8,
+              w: 8,
+              h: 1,
+            },
+            children: []
+          },
+          {
+            type: 'Footer',
+            props: {
+              logo: 'https://via.placeholder.com/150x50',
+              sections: [
+                {
+                  heading: 'Company',
+                  links: [
+                    { text: 'About Us', url: '/about' },
+                    { text: 'Contact', url: '/contact' }
+                  ]
+                }
+              ],
+              showNewsletter: true,
+              showSocial: true
+            },
+            layout: {
+              x: 0,
+              y: 9,
+              w: 12,
+              h: 4,
+            },
+            children: []
+          }
+        ],
         seo: {
           metaTitle: 'Contact Us - Your Store',
           metaDescription: 'Contact our support team',
