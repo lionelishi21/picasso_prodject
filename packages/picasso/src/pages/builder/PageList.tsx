@@ -8,30 +8,38 @@ import { useDispatch, useSelector } from 'react-redux';
 import { 
   getSitePages, 
   createPage, 
-  deletePage 
-//   duplicatePage 
+  deletePage,
+  clonePage
 } from '../../store/slices/pageSlice';
 import { getSiteById } from '../../store/slices/siteSlice';
-import { AppDispatch, RootState } from '../../store/index';
+import type { AppDispatch, RootState } from '../../store/index';
 
 // TypeScript interfaces
 interface RouteParams {
+  [key: string]: string | undefined;
   siteId: string;
 }
 
-interface Page {
+interface Component {
   id: string;
-  title: string;
-  slug: string;
+  type: string;
+  props: Record<string, unknown>;
+}
+
+interface Page {
+  _id: string;
+  name: string;
+  path: string;
+  title?: string;
   description?: string;
-  isPublished: boolean;
+  published: boolean;
   createdAt: string;
   updatedAt: string;
-  components: any[];
+  components: Component[];
   seo?: {
-    title?: string;
-    description?: string;
-    keywords?: string[];
+    metaTitle?: string;
+    metaDescription?: string;
+    metaKeywords?: string;
   };
 }
 
@@ -49,33 +57,33 @@ const CreatePageModal: React.FC<CreatePageModalProps> = ({
   isCreating 
 }) => {
   const [formData, setFormData] = useState({
-    title: '',
-    slug: '',
+    name: '',
+    path: '',
     description: ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.title.trim()) {
+    if (formData.name.trim()) {
       onSubmit({
         ...formData,
-        slug: formData.slug || formData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+        path: formData.path || `/${formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`
       });
     }
   };
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const title = e.target.value;
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value;
     setFormData(prev => ({
       ...prev,
-      title,
-      slug: prev.slug || title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      name,
+      path: prev.path || `/${name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`
     }));
   };
 
   useEffect(() => {
     if (!isOpen) {
-      setFormData({ title: '', slug: '', description: '' });
+      setFormData({ name: '', path: '', description: '' });
     }
   }, [isOpen]);
 
@@ -88,35 +96,35 @@ const CreatePageModal: React.FC<CreatePageModalProps> = ({
           <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Page</h3>
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                Page Title *
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                Page Name *
               </label>
               <input
                 type="text"
-                id="title"
-                value={formData.title}
-                onChange={handleTitleChange}
+                id="name"
+                value={formData.name}
+                onChange={handleNameChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter page title"
+                placeholder="Enter page name"
                 required
                 autoFocus
               />
             </div>
             
             <div className="mb-4">
-              <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-1">
-                URL Slug
+              <label htmlFor="path" className="block text-sm font-medium text-gray-700 mb-1">
+                URL Path
               </label>
               <input
                 type="text"
-                id="slug"
-                value={formData.slug}
-                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                id="path"
+                value={formData.path}
+                onChange={(e) => setFormData(prev => ({ ...prev, path: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="page-url-slug"
+                placeholder="/page-url-path"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Leave empty to auto-generate from title
+                Leave empty to auto-generate from name
               </p>
             </div>
             
@@ -145,7 +153,7 @@ const CreatePageModal: React.FC<CreatePageModalProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={!formData.title.trim() || isCreating}
+                disabled={!formData.name.trim() || isCreating}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {isCreating ? 'Creating...' : 'Create Page'}
@@ -159,14 +167,15 @@ const CreatePageModal: React.FC<CreatePageModalProps> = ({
 };
 
 const PageList: React.FC = () => {
-  const { siteId } = useParams<RouteParams>();
+  const { siteId = '' } = useParams<RouteParams>();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   
   // Get data from Redux store
-  const { pages, loading, error } = useSelector((state: RootState) => state.page);
-  const { currentSite } = useSelector((state: RootState) => state.site);
+  const { pages, isLoading: pagesLoading, isError: pagesError, message: pagesMessage } = useSelector((state: RootState) => state.page);
+  const { currentSite, isLoading: siteLoading } = useSelector((state: RootState) => state.site);
   
+  console.log('pages', pages);
   // Local state
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft'>('all');
@@ -174,28 +183,31 @@ const PageList: React.FC = () => {
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [deletingPageId, setDeletingPageId] = useState<string | null>(null);
   const [duplicatingPageId, setDuplicatingPageId] = useState<string | null>(null);
+  const [dataLoaded, setDataLoaded] = useState<boolean>(false);
 
-  // Load site data if not already loaded
+  // Load initial data
   useEffect(() => {
-    if (!currentSite || currentSite.id !== siteId) {
+    if (siteId && !dataLoaded) {
       dispatch(getSiteById(siteId));
+      dispatch(getSitePages(siteId));
+      setDataLoaded(true);
     }
-  }, [dispatch, siteId, currentSite]);
+  }, [dispatch, siteId, dataLoaded]);
 
-  // Load pages for this site
+  // Reset dataLoaded when siteId changes
   useEffect(() => {
-    dispatch(getPagesBySite(siteId));
-  }, [dispatch, siteId]);
+    setDataLoaded(false);
+  }, [siteId]);
 
   // Filter pages based on search and status
-  const filteredPages = pages.filter(page => {
-    const matchesSearch = page.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         page.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredPages = pages.filter((page: Page) => {
+    const matchesSearch = page.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         page.path.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (page.description && page.description.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = filterStatus === 'all' || 
-                         (filterStatus === 'published' && page.isPublished) ||
-                         (filterStatus === 'draft' && !page.isPublished);
+                         (filterStatus === 'published' && page.published) ||
+                         (filterStatus === 'draft' && !page.published);
     
     return matchesSearch && matchesStatus;
   });
@@ -204,16 +216,18 @@ const PageList: React.FC = () => {
   const handleCreatePage = async (pageData: Partial<Page>) => {
     setIsCreating(true);
     try {
-      const newPage = await dispatch(createPage({
+      const newPageData = {
         ...pageData,
-        siteId,
-        isPublished: false,
+        site: siteId,
+        published: false,
         components: []
-      })).unwrap();
+      };
+      
+      const newPage = await dispatch(createPage(newPageData)).unwrap();
       
       setShowCreateModal(false);
       // Navigate to the new page editor
-      navigate(`/sites/${siteId}/pages/${newPage.id}/edit`);
+      navigate(`/builder/${siteId}/pages/${newPage._id}`);
     } catch (error) {
       console.error('Failed to create page:', error);
     } finally {
@@ -237,11 +251,19 @@ const PageList: React.FC = () => {
 
   // Handle duplicate page
   const handleDuplicatePage = async (pageId: string) => {
+    const originalPage = pages.find((p: Page) => p._id === pageId);
+    if (!originalPage) return;
+
     setDuplicatingPageId(pageId);
     try {
-      const duplicatedPage = await dispatch(duplicatePage(pageId)).unwrap();
+      const duplicatedPage = await dispatch(clonePage({
+        pageId,
+        name: `${originalPage.name} (Copy)`,
+        path: `${originalPage.path}-copy`
+      })).unwrap();
+      
       // Optionally navigate to the duplicated page
-      navigate(`/sites/${siteId}/pages/${duplicatedPage.id}/edit`);
+      navigate(`/builder/${siteId}/pages/${duplicatedPage._id}`);
     } catch (error) {
       console.error('Failed to duplicate page:', error);
     } finally {
@@ -251,7 +273,7 @@ const PageList: React.FC = () => {
 
   // Handle edit page
   const handleEditPage = (pageId: string) => {
-    navigate(`/sites/${siteId}/pages/${pageId}/edit`);
+    navigate(`/builder/${siteId}/pages/${pageId}`);
   };
 
   // Format date
@@ -265,18 +287,20 @@ const PageList: React.FC = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading pages...</p>
-        </div>
-      </div>
-    );
-  }
+  const isLoading = pagesLoading || siteLoading;
 
-  if (error) {
+  // if (isLoading) {
+  //   return (
+  //     <div className="h-full flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+  //         <p className="text-gray-600">Loading pages...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
+  if (pagesError) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
@@ -286,8 +310,11 @@ const PageList: React.FC = () => {
             </svg>
           </div>
           <p className="text-gray-600">Failed to load pages</p>
+          <p className="text-sm text-gray-500 mb-4">{pagesMessage}</p>
           <button
-            onClick={() => dispatch(getPagesBySite(siteId))}
+            onClick={() => {
+              dispatch(getSitePages(siteId));
+            }}
             className="mt-2 text-blue-600 hover:text-blue-800"
           >
             Try again
@@ -394,29 +421,29 @@ const PageList: React.FC = () => {
         ) : (
           <div className="bg-white shadow overflow-hidden sm:rounded-md mx-6 my-6">
             <ul className="divide-y divide-gray-200">
-              {filteredPages.map((page) => (
-                <li key={page.id}>
+              {filteredPages.map((page: Page) => (
+                <li key={page._id}>
                   <div className="px-4 py-4 flex items-center justify-between hover:bg-gray-50">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className={`w-2 h-2 rounded-full ${page.isPublished ? 'bg-green-400' : 'bg-yellow-400'}`} />
+                        <div className={`w-2 h-2 rounded-full ${page.published ? 'bg-green-400' : 'bg-yellow-400'}`} />
                       </div>
                       <div className="ml-4">
                         <div className="flex items-center">
                           <p className="text-sm font-medium text-gray-900 truncate">
-                            {page.title}
+                            {page.name}
                           </p>
                           <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            page.isPublished 
+                            page.published 
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-yellow-100 text-yellow-800'
                           }`}>
-                            {page.isPublished ? 'Published' : 'Draft'}
+                            {page.published ? 'Published' : 'Draft'}
                           </span>
                         </div>
                         <div className="mt-1">
                           <p className="text-sm text-gray-600">
-                            /{page.slug}
+                            {page.path}
                           </p>
                           {page.description && (
                             <p className="text-sm text-gray-500 mt-1">
@@ -438,7 +465,7 @@ const PageList: React.FC = () => {
                     
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => handleEditPage(page.id)}
+                        onClick={() => handleEditPage(page._id)}
                         className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
                         <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -447,28 +474,26 @@ const PageList: React.FC = () => {
                         Edit
                       </button>
                       
-                      <div className="relative inline-block text-left">
-                        <button
-                          onClick={() => handleDuplicatePage(page.id)}
-                          disabled={duplicatingPageId === page.id}
-                          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                        >
-                          {duplicatingPageId === page.id ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                          ) : (
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleDuplicatePage(page._id)}
+                        disabled={duplicatingPageId === page._id}
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                      >
+                        {duplicatingPageId === page._id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                        ) : (
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        )}
+                      </button>
                       
                       <button
-                        onClick={() => handleDeletePage(page.id)}
-                        disabled={deletingPageId === page.id}
+                        onClick={() => handleDeletePage(page._id)}
+                        disabled={deletingPageId === page._id}
                         className="inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
                       >
-                        {deletingPageId === page.id ? (
+                        {deletingPageId === page._id ? (
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
                         ) : (
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

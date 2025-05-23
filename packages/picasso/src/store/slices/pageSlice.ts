@@ -4,9 +4,19 @@
  */
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import pageService from '../services/pageService';
+import type { Page } from '../../types/page';
+
+interface PageState {
+  pages: Page[];
+  currentPage: Page | null;
+  isLoading: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+  message: string;
+}
 
 // Initial state
-const initialState = {
+const initialState: PageState = {
   pages: [],
   currentPage: null,
   isLoading: false,
@@ -16,7 +26,7 @@ const initialState = {
 };
 
 // Get all pages for a site
-export const getSitePages = createAsyncThunk(
+export const getSitePages = createAsyncThunk<Page[], string>(
   'page/getSitePages',
   async (siteId, thunkAPI) => {
     try {
@@ -42,7 +52,7 @@ export const getPageById = createAsyncThunk(
 );
 
 // Create new page
-export const createPage = createAsyncThunk(
+export const createPage = createAsyncThunk<Page, Partial<Page>>(
   'page/createPage',
   async (pageData, thunkAPI) => {
     try {
@@ -68,7 +78,7 @@ export const updatePage = createAsyncThunk(
 );
 
 // Delete page
-export const deletePage = createAsyncThunk(
+export const deletePage = createAsyncThunk<string, string>(
   'page/deletePage',
   async (pageId, thunkAPI) => {
     try {
@@ -81,11 +91,17 @@ export const deletePage = createAsyncThunk(
 );
 
 // Clone page
-export const clonePage = createAsyncThunk(
+interface ClonePagePayload {
+  pageId: string;
+  name: string;
+  path: string;
+}
+
+export const clonePage = createAsyncThunk<Page, ClonePagePayload>(
   'page/clonePage',
-  async ({ pageId, name, path }, thunkAPI) => {
+  async (payload, thunkAPI) => {
     try {
-      return await pageService.clonePage(pageId, name, path);
+      return await pageService.clonePage(payload);
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Something went wrong';
       return thunkAPI.rejectWithValue(message);

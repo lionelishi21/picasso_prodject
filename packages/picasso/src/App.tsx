@@ -22,7 +22,7 @@ import SiteEdit from './pages/dashboard/SiteEdit';
 import PageEditor from './pages/builder/PageEditor';
 import ThemeEditor from './pages/builder/ThemeEditor';
 import SitePreview from './pages/builder/SitePreview';
-
+import PageList from './pages/builder/PageList';
 // Public site
 import PublicSite from './pages/public/PublicSite';
 
@@ -99,13 +99,28 @@ const App: React.FC = () => {
             } />
             
             {/* Builder Routes */}
-            <Route path="/builder/:siteId/pages/:pageId" element={
+            {/* <Route path="/builder/:siteId/pages/:pageId" element={
               <PrivateRoute>
                 <BuilderLayout>
                   <PageEditor />
                 </BuilderLayout>
               </PrivateRoute>
+            } /> */}
+
+            <Route path="/builder/:siteId/pages" element={
+              <PrivateRoute>
+                <BuilderLayout>
+                  <PageList />
+                </BuilderLayout>
+              </PrivateRoute>
             } />
+            
+            {/* <Route path="/builder/:siteId/pages" element={
+              <PrivateRoute>
+                <BuilderLayout>
+                </BuilderLayout>
+              </PrivateRoute>
+            } /> */}
 
             
             

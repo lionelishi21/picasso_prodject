@@ -7,12 +7,14 @@ import api from './api';
 // Get all pages for a site
 const getSitePages = async (siteId) => {
   const response = await api.get(`/pages/site/${siteId}`);
+  console.log('getSitePages response', response);
   return response.data.data;
 };
 
 // Get page by ID
 const getPageById = async (pageId) => {
   const response = await api.get(`/pages/${pageId}`);
+  console.log('getPageById response', response);
   return response.data.data;
 };
 

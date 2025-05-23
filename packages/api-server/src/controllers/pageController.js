@@ -222,7 +222,7 @@ export const clonePage = async (req, res) => {
   }
 };
 
-// Toggle page published status
+// Toggle page published status 
 export const togglePublished = async (req, res) => {
   try {
     const { id } = req.params;
@@ -248,3 +248,74 @@ export const togglePublished = async (req, res) => {
     });
   }
 };
+
+export const getPagesBySite = async (req, res) => {
+  const { siteId } = req.params;
+  console.log('getPagesBySite options', req.params);
+
+  try {
+    
+    // const {
+    //   published,
+    //   search,
+    //   limit,
+    //   skip,
+    //   sortBy = 'createdAt',
+    //   sortOrder = -1
+    // } = options;
+    const sortBy = 'createdAt';
+    const sortOrder = -1;
+    
+    // Build query
+    const query = { site: siteId };
+    
+    // if (published !== undefined) {
+    //   query.isPublished = published;
+    // }
+    
+    // if (search) {
+    //   query.$or = [
+    //     { name: { $regex: search, $options: 'i' } },
+    //     { title: { $regex: search, $options: 'i' } },
+    //     { description: { $regex: search, $options: 'i' } },
+    //     { path: { $regex: search, $options: 'i' } }
+    //   ];
+    // }
+    
+    // Execute query
+    let dbQuery = Page.find(query)
+      .select('name path title description components isPublished publishedAt createdAt updatedAt isDefault')
+      .sort({ [sortBy]: sortOrder });
+    
+    // if (skip) {
+    //   dbQuery = dbQuery.skip(skip);
+    // }
+    
+    // if (limit) {
+    //   dbQuery = dbQuery.limit(limit);
+    // }
+    
+    const pages = await dbQuery;
+    console.log('pages', pages);
+    
+    // Get total count for pagination
+    const total = await Page.countDocuments(query);
+    
+    return {
+      pages,
+      total,
+      // hasMore: skip + limit < total
+    };
+  } catch (error) {
+    console.error('Error getting pages by site:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error getting pages by site',
+      error: error.message
+    });
+  }
+};
+
+
+
+

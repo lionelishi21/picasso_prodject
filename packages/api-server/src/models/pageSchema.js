@@ -26,6 +26,13 @@ const PageSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  // ADDED: Reference to the site this page belongs to
+  site: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Site',
+    required: true,
+    index: true
+  },
   components: [ComponentInstanceSchema],
   isPublished: {
     type: Boolean,
@@ -73,6 +80,10 @@ PageSchema.methods.unpublish = function() {
   this.isPublished = false;
   return this.save();
 };
+
+// Indexes for better performance
+PageSchema.index({ site: 1, path: 1 }, { unique: true }); // Unique path per site
+PageSchema.index({ site: 1, isPublished: 1 }); // For finding published pages per site
 
 // ✅ Create and export the MODEL, not just the schema
 const Page = mongoose.model('Page', PageSchema);

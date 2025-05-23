@@ -28,10 +28,6 @@ interface BuilderLayoutProps {
   children: React.ReactNode;
 }
 
-interface RouteParams {
-  siteId: string;
-}
-
 const BuilderLayout: React.FC<BuilderLayoutProps> = ({ children }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -47,7 +43,7 @@ const BuilderLayout: React.FC<BuilderLayoutProps> = ({ children }) => {
   // Load site data if not already loaded
   useEffect(() => {
     if (siteId && (!currentSite || currentSite.id !== siteId)) {
-      dispatch(getSiteById(siteId));
+      // dispatch(getSiteById(siteId));
     }
   }, [dispatch, siteId, currentSite]);
   

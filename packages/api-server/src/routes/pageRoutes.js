@@ -14,6 +14,8 @@ router.get('/', authMiddleware, pageController.getPages);
 // Get a single page
 router.get('/:id', authMiddleware, pageController.getPage);
 
+router.get('/site/:siteId', authMiddleware, pageController.getPagesBySite);
+
 // Create a new page
 router.post('/', authMiddleware, pageController.createPage);
 
