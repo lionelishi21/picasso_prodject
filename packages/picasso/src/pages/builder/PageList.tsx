@@ -188,8 +188,11 @@ const PageList: React.FC = () => {
   // Load initial data
   useEffect(() => {
     if (siteId && !dataLoaded) {
-      dispatch(getSiteById(siteId));
-      dispatch(getSitePages(siteId));
+      // dispatch(getSiteById(siteId));
+      dispatch(getSitePages({ 
+        siteId, 
+        options: {}     // or whatever config you actually need 
+      }));
       setDataLoaded(true);
     }
   }, [dispatch, siteId, dataLoaded]);

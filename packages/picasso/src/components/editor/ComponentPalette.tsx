@@ -5,18 +5,17 @@
 import React, { useState } from 'react';
 
 interface ComponentDefinition {
-  type: string;
-  category?: string;
   displayName?: string;
+  category?: string;
   description?: string;
-  defaultProps?: Record<string, any>;
+  defaultProps?: Record<string, unknown>;
   defaultLayout?: {
     w?: number;
     h?: number;
     minW?: number;
     minH?: number;
   };
-  propsSchema?: Record<string, any>;
+  propDefinitions?: Record<string, unknown>;
 }
 
 interface ComponentPaletteProps {
@@ -26,7 +25,7 @@ interface ComponentPaletteProps {
 }
 
 const ComponentPalette: React.FC<ComponentPaletteProps> = ({ 
-  components,
+  components = {},
   onAddComponent,
   className = ''
 }) => {
@@ -34,61 +33,56 @@ const ComponentPalette: React.FC<ComponentPaletteProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   
   // Organize components by category
-  const componentsByCategory = Object.entries(components).reduce<Record<string, ComponentDefinition[]>>((acc, [key, component]) => {
-    const category = component.category || 'Other';
+  const componentsByCategory = Object.entries(components).reduce<Record<string, { type: string; definition: ComponentDefinition }[]>>((acc, [type, definition]) => {
+    const category = definition.category || 'Other';
     
     if (!acc[category]) {
       acc[category] = [];
     }
     
-    acc[category].push({
-      ...component,
-      type: key
-    });
-    
+    acc[category].push({ type, definition });
     return acc;
   }, {});
   
   // Get unique categories
-  const categories = ['all', ...Object.keys(componentsByCategory)];
+  const categories = ['all', ...Object.keys(componentsByCategory)].sort();
   
-  // Filter components based on search query and active category
-  const filteredComponents = Object.entries(componentsByCategory).flatMap(([category, categoryComponents]) => {
-    if (activeCategory !== 'all' && activeCategory !== category) {
-      return [];
+  // Filter components based on search query
+  const filteredComponents = Object.entries(componentsByCategory).reduce<Record<string, { type: string; definition: ComponentDefinition }[]>>((acc, [category, components]) => {
+    const filtered = components.filter(({ type, definition }) => {
+      const searchString = `${type} ${definition.displayName || ''} ${definition.description || ''}`.toLowerCase();
+      return searchString.includes(searchQuery.toLowerCase());
+    });
+    
+    if (filtered.length > 0) {
+      acc[category] = filtered;
     }
     
-    return categoryComponents.filter(component => 
-      component.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (component.displayName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-      (component.description?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-    );
-  });
+    return acc;
+  }, {});
   
   return (
-    <div className={`component-palette p-4 ${className}`}>
-      <h2 className="text-lg font-semibold mb-4">Components</h2>
-      
-      {/* Search Box */}
-      <div className="mb-4">
+    <div className={`component-palette ${className}`}>
+      {/* Search bar */}
+      <div className="p-4 border-b border-gray-200">
         <input
           type="text"
           placeholder="Search components..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={searchQuery}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
       
-      {/* Category Tabs */}
-      <div className="mb-4 flex flex-wrap">
+      {/* Category tabs */}
+      <div className="flex overflow-x-auto border-b border-gray-200">
         {categories.map(category => (
           <button
             key={category}
-            className={`mr-2 mb-2 px-3 py-1 text-xs font-medium rounded ${
+            className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
               activeCategory === category
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
             onClick={() => setActiveCategory(category)}
           >
@@ -97,23 +91,44 @@ const ComponentPalette: React.FC<ComponentPaletteProps> = ({
         ))}
       </div>
       
-      {/* Component List */}
-      <div className="space-y-2">
-        {filteredComponents.map(component => (
-          <div
-            key={component.type}
-            className="bg-white border border-gray-200 rounded p-3 cursor-pointer hover:border-gray-400 transition-colors duration-150"
-            onClick={() => onAddComponent(component.type)}
-          >
-            <div className="font-medium mb-1">{component.displayName || component.type}</div>
-            {component.description && (
-              <div className="text-xs text-gray-600">{component.description}</div>
-            )}
-          </div>
-        ))}
+      {/* Component list */}
+      <div className="overflow-y-auto">
+        {Object.entries(filteredComponents).map(([category, components]) => {
+          // Skip if not matching active category
+          if (activeCategory !== 'all' && activeCategory !== category) {
+            return null;
+          }
+          
+          return (
+            <div key={category} className="p-4">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">
+                {category}
+              </h3>
+              <div className="space-y-2">
+                {components.map(({ type, definition }) => (
+                  <button
+                    key={type}
+                    className="w-full p-3 text-left bg-white border border-gray-200 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onClick={() => onAddComponent(type)}
+                  >
+                    <div className="text-sm font-medium">
+                      {definition.displayName || type}
+                    </div>
+                    {definition.description && (
+                      <div className="mt-1 text-xs text-gray-500">
+                        {definition.description}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
         
-        {filteredComponents.length === 0 && (
-          <div className="text-center py-4 text-gray-500">
+        {/* Empty state */}
+        {Object.keys(filteredComponents).length === 0 && (
+          <div className="p-4 text-center text-gray-500">
             No components found.
           </div>
         )}

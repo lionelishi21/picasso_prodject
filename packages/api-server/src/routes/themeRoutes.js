@@ -14,6 +14,9 @@ router.use(authMiddleware);
 // Theme CRUD operations
 router.get('/', themeController.getAllThemes);
 router.get('/:id', themeController.getThemeById);
+// router.get('/site/:siteId', themeController.getThemeBySite);
+router.get('/site/:siteId/default', themeController.getDefaultTheme);
+// router.get('/site/:siteId/active', themeController.getActiveTheme);
 router.post('/', themeController.createTheme);
 router.put('/:id', themeController.updateTheme);
 router.delete('/:id', themeController.deleteTheme);

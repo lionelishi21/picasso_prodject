@@ -26,14 +26,13 @@ const initialState: PageState = {
 };
 
 // Get all pages for a site
-export const getSitePages = createAsyncThunk<Page[], string>(
+export const getSitePages = createAsyncThunk<Page[], { siteId: string, options: any }>(
   'page/getSitePages',
-  async (siteId, thunkAPI) => {
+  async ({ siteId, options }, thunkAPI) => {
     try {
-      return await pageService.getSitePages(siteId);
-    } catch (error) {
-      const message = error.response?.data?.message || error.message || 'Something went wrong';
-      return thunkAPI.rejectWithValue(message);
+      return await pageService.getSitePages(siteId, options);
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err);  
     }
   }
 );
@@ -146,6 +145,7 @@ const pageSlice = createSlice({
       .addCase(getSitePages.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
+        console.log('getSitePages action.payload', action.payload);
         state.pages = action.payload;
       })
       .addCase(getSitePages.rejected, (state, action) => {

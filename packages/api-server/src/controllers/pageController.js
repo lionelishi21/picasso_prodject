@@ -251,7 +251,7 @@ export const togglePublished = async (req, res) => {
 
 export const getPagesBySite = async (req, res) => {
   const { siteId } = req.params;
-  console.log('getPagesBySite options', req.params);
+  console.log('getPagesBySite options', siteId);
 
   try {
     
@@ -300,12 +300,8 @@ export const getPagesBySite = async (req, res) => {
     
     // Get total count for pagination
     const total = await Page.countDocuments(query);
-    
-    return {
-      pages,
-      total,
-      // hasMore: skip + limit < total
-    };
+  
+    return res.status(200).json({ success: true, data: pages });
   } catch (error) {
     console.error('Error getting pages by site:', error);
     return res.status(500).json({

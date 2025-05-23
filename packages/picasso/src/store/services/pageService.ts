@@ -5,9 +5,9 @@
 import api from './api';
 
 // Get all pages for a site
-const getSitePages = async (siteId) => {
+const getSitePages = async (siteId: string, options: any) => {  
   const response = await api.get(`/pages/site/${siteId}`);
-  console.log('getSitePages response', response);
+  console.log('getSitePages response', response);  
   return response.data.data;
 };
 

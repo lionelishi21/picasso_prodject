@@ -99,13 +99,13 @@ const App: React.FC = () => {
             } />
             
             {/* Builder Routes */}
-            {/* <Route path="/builder/:siteId/pages/:pageId" element={
+            <Route path="/builder/:siteId/pages/:pageId" element={
               <PrivateRoute>
                 <BuilderLayout>
                   <PageEditor />
                 </BuilderLayout>
               </PrivateRoute>
-            } /> */}
+            } />
 
             <Route path="/builder/:siteId/pages" element={
               <PrivateRoute>
